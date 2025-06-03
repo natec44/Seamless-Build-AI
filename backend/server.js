@@ -11,7 +11,7 @@ import projectRoutes from './routes/projects.js';
 import taskRoutes from './routes/tasks.js';
 import userRoutes from './routes/users.js';
 import vendorRoutes from './routes/vendors.js';
-import analyticsRoutes from './routes/analytics.js';
+import { analyticsRoutes } from './routes/analytics.js';
 import notificationRoutes from './routes/notifications.js';
 import adminRoutes from './routes/admin.js';
 
