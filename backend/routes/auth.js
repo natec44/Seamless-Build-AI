@@ -1,9 +1,10 @@
-const express = require('express');
+import express from 'express';
+
 const router = express.Router();
-const authController = require('../controllers/authController');
 
-router.post('/register', authController.register);
-router.post('/login', authController.login);
-router.get('/me', authController.getProfile);
+// Auth routes
+router.post('/auth/login', (req, res) => {
+  res.json({ token: 'mock-token' });
+});
 
-module.exports = router;
+export default router;
