@@ -1,12 +1,10 @@
-const express = require('express');
+import express from 'express';
+
 const router = express.Router();
-const projectController = require('../controllers/projectController');
-const { authenticate } = require('../middleware/auth');
 
-router.get('/', authenticate, projectController.getAllProjects);
-router.post('/', authenticate, projectController.createProject);
-router.get('/:id', authenticate, projectController.getProjectById);
-router.put('/:id', authenticate, projectController.updateProject);
-router.delete('/:id', authenticate, projectController.deleteProject);
+// Define project-related routes
+router.get('/projects', (req, res) => {
+  res.json({ message: 'All Projects' });
+});
 
-module.exports = router;
+export default router;
