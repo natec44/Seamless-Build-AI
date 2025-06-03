@@ -1,9 +1,10 @@
-const express = require('express');
+import express from 'express';
+
 const router = express.Router();
-const analyticsController = require('../controllers/analyticsController');
-const { authenticate } = require('../middleware/auth');
 
-router.get('/overview/:projectId', authenticate, analyticsController.getProjectOverview);
-router.get('/report/:projectId', authenticate, analyticsController.getDetailedReport);
+// Analytics routes
+router.get('/analytics', (req, res) => {
+  res.json({ usage: 'Analytics Data' });
+});
 
-module.exports = router;
+export default router;
