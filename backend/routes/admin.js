@@ -1,10 +1,10 @@
-// backend/routes/admin.js
 import express from 'express';
+
 const router = express.Router();
 
-// Sample route
-router.get('/', (req, res) => {
-  res.send('Admin route working');
+// Define your admin-related routes
+router.get('/admin/dashboard', (req, res) => {
+  res.json({ message: 'Admin Dashboard' });
 });
 
 export default router;
