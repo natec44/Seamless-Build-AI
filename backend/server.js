@@ -1,66 +1,55 @@
 import express from 'express';
-import http from 'http';
 import cors from 'cors';
-import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import { Server as SocketServer } from 'socket.io';
-import socketHandler from './socket.js';
+import mongoose from 'mongoose';
 
-import authRoutes from './routes/auth.js';
-import projectRoutes from './routes/projects.js';
-import taskRoutes from './routes/tasks.js';
-import userRoutes from './routes/users.js';
-import vendorRoutes from './routes/vendors.js';
-import { analyticsRoutes } from './routes/analytics.js';
-import notificationRoutes from './routes/notifications.js';
-import adminRoutes from './routes/admin.js';
-
-import { errorHandler } from './middleware/errorHandler.js';
-
+// Load environment variables from .env file
 dotenv.config();
 
 const app = express();
-const server = http.createServer(app);
-const io = new SocketServer(server, {
-  cors: {
-    origin: process.env.CLIENT_URL,
-    methods: ['GET', 'POST'],
-  },
-});
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.CLIENT_URL, // Ensure this is set in your .env
+  credentials: true
+}));
 app.use(express.json());
 
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/projects', projectRoutes);
-app.use('/api/tasks', taskRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/vendors', vendorRoutes);
-app.use('/api/analytics', analyticsRoutes);
-app.use('/api/notifications', notificationRoutes);
-app.use('/api/admin', adminRoutes);
+// Route imports
+import adminRoutes from './routes/admin.js';
+import projectRoutes from './routes/projects.js';
+import taskRoutes from './routes/tasks.js';
+import materialRoutes from './routes/materials.js';
+import authRoutes from './routes/auth.js';
+import analyticsRoutes from './routes/analytics.js';
 
-// Error handler
-app.use(errorHandler);
+// Register routes with prefix
+app.use('/api', adminRoutes);
+app.use('/api', projectRoutes);
+app.use('/api', taskRoutes);
+app.use('/api', materialRoutes);
+app.use('/api', authRoutes);
+app.use('/api', analyticsRoutes);
+
+// Root route
+app.get('/', (req, res) => {
+  res.send('SeamlessBuild Backend API is running');
+});
 
 // MongoDB connection
-mongoose
-  .connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => {
-    console.log('MongoDB connected');
-    const PORT = process.env.PORT || 5000;
-    server.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
-  })
-  .catch((err) => {
-    console.error('MongoDB connection error:', err);
-  });
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
+.then(() => {
+  console.log('MongoDB connected');
+})
+.catch(err => {
+  console.error('MongoDB connection error:', err.message);
+});
 
-// Initialize socket
-socketHandler(io);
+// Start server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
