@@ -25,3 +25,22 @@ const TaskTracking = () => {
 };
 
 export default TaskTracking;
+import { saveToIndexedDB } from '../utils/indexedDBUtils';
+
+async function handleSubmit(taskData) {
+  try {
+    await axios.post('/api/tasks/update', taskData);
+  } catch (err) {
+    if (!navigator.onLine) {
+      await saveToIndexedDB('offlineTasks', taskData);
+
+      if ('serviceWorker' in navigator && 'SyncManager' in window) {
+        const reg = await navigator.serviceWorker.ready;
+        await reg.sync.register('sync-tasks');
+        console.log('Background sync registered');
+      } else {
+        console.warn('Background sync not supported');
+      }
+    }
+  }
+}
