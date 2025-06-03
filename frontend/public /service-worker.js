@@ -1,53 +1,77 @@
 const CACHE_NAME = 'seamlessbuild-cache-v1';
-const urlsToCache = [
-  '/',
-  '/index.html',
-  '/offline.html',
-  '/manifest.json',
-  '/icon-192x192.png',
-  '/icon-512x512.png'
-];
+const OFFLINE_URL = '/offline.html';
 
-// Install SW and cache necessary files
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(urlsToCache);
+      return cache.addAll([OFFLINE_URL, '/']);
     })
   );
   self.skipWaiting();
 });
 
-// Activate SW and clean up old caches
 self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
-        keys.map(key => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
-        })
-      )
-    )
-  );
-  self.clients.claim();
+  event.waitUntil(self.clients.claim());
 });
 
-// Fetch from cache first, fallback to network, then fallback to offline page
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
 
   event.respondWith(
-    fetch(event.request)
-      .then(response => {
-        // Cache a clone of the response
-        const resClone = response.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(event.request, resClone));
-        return response;
-      })
-      .catch(() =>
-        caches.match(event.request).then(cached => cached || caches.match('/offline.html'))
-      )
+    fetch(event.request).catch(() => caches.match(event.request).then(response => {
+      return response || caches.match(OFFLINE_URL);
+    }))
   );
 });
+
+// Background sync
+self.addEventListener('sync', event => {
+  if (event.tag === 'sync-tasks') {
+    event.waitUntil(syncOfflineTasks());
+  }
+});
+
+async function syncOfflineTasks() {
+  const db = await openDB();
+  const tasks = await db.getAll('offlineTasks');
+
+  for (const task of tasks) {
+    try {
+      await fetch('/api/tasks/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(task),
+      });
+      await db.delete('offlineTasks', task.id);
+    } catch (err) {
+      console.error('Sync failed:', err);
+    }
+  }
+}
+
+// Push notifications
+self.addEventListener('push', event => {
+  const data = event.data?.json() || {};
+  const title = data.title || 'SeamlessBuild Notification';
+  const options = {
+    body: data.body || 'You have a new update.',
+    icon: '/icons/icon-192x192.png',
+    badge: '/icons/icon-96x96.png'
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+// Minimal IndexedDB wrapper
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('SeamlessBuildDB', 1);
+    request.onupgradeneeded = event => {
+      const db = event.target.result;
+      if (!db.objectStoreNames.contains('offlineTasks')) {
+        db.createObjectStore('offlineTasks', { keyPath: 'id', autoIncrement: true });
+      }
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
