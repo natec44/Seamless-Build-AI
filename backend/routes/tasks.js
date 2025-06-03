@@ -1,11 +1,10 @@
-const express = require('express');
+import express from 'express';
+
 const router = express.Router();
-const taskController = require('../controllers/taskController');
-const { authenticate } = require('../middleware/auth');
 
-router.get('/:projectId', authenticate, taskController.getTasksByProject);
-router.post('/', authenticate, taskController.createTask);
-router.put('/:id', authenticate, taskController.updateTask);
-router.delete('/:id', authenticate, taskController.deleteTask);
+// Define task-related routes
+router.get('/tasks', (req, res) => {
+  res.json({ message: 'All Tasks' });
+});
 
-module.exports = router;
+export default router;
