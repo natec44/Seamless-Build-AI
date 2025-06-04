@@ -7,8 +7,7 @@ const BlueprintUpload = () => {
     if (!file) return;
     const formData = new FormData();
     formData.append('blueprint', file);
-    // Upload logic here
-  };
+     };
 
   return (
     <div className="bg-white p-4 rounded-2xl shadow">
