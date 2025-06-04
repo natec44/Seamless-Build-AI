@@ -24,7 +24,6 @@ self.addEventListener('fetch', event => {
   );
 });
 
-// Background sync
 self.addEventListener('sync', event => {
   if (event.tag === 'sync-tasks') {
     event.waitUntil(syncOfflineTasks());
@@ -49,7 +48,6 @@ async function syncOfflineTasks() {
   }
 }
 
-// Push notifications
 self.addEventListener('push', event => {
   const data = event.data?.json() || {};
   const title = data.title || 'SeamlessBuild Notification';
@@ -61,7 +59,6 @@ self.addEventListener('push', event => {
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
-// Minimal IndexedDB wrapper
 function openDB() {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open('SeamlessBuildDB', 1);
